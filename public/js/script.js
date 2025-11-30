@@ -117,9 +117,6 @@ async function processWaifu(processType) {
                                     <button onclick="downloadImage('${data.processedImage}', '${processType}')" class="download-btn">📥 Download</button>
                                 </div>
                             </div>
-                            <div class="analysis-result">
-                                <p>${data.analysis || "Berhasil diproses."}</p>
-                            </div>
                         </div>
                     `;
 
@@ -232,3 +229,4 @@ function showError(message, resultId) {
         resultDiv.innerHTML = `<div class="error">${message}</div>`;
     }
 }
+
