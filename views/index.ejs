@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">Penghitaman & Pembotakan Gambar.</h1>
+            <p class="subtitle">Minimalis. Kreatif.</p>
+        </header>
+
+        <main class="main-content">
+            <div class="tools-section">
+                <div class="tools-grid">
+
+                    <div class="tool-card" onclick="openTool('darken')">
+                        <div class="tool-header">
+                            <h3>Penghitaman Gambar</h3>
+                            <div class="tool-categories">
+                                <span class="tool-category">AI</span>
+                                <span class="tool-category">Kulit</span>
+                            </div>
+                        </div>
+                        <p class="tool-description">Mengubah kulit gambar menjadi lebih gelap.</p>
+                        <div class="tool-base">
+                            Base: <span class="base-url">Flux AI</span>
+                        </div>
+                    </div>
+
+                    <div class="tool-card" onclick="openTool('bald')">
+                        <div class="tool-header">
+                            <h3>Pembotak Gambar</h3>
+                            <div class="tool-categories">
+                                <span class="tool-category">AI</span>
+                                <span class="tool-category">Botak</span>
+                            </div>
+                        </div>
+                        <p class="tool-description">Membuat gambar menjadi botak.</p>
+                        <div class="tool-base">
+                            Base: <span class="base-url">Flux AI</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="darkenModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Penghitaman Gambar</h2>
+                <span class="close" onclick="closeModal('darkenModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="upload-section">
+                    <div class="file-input-container">
+                        <input type="file" id="darkenImage" accept="image/*" class="file-input">
+                        <label for="darkenImage" class="file-label">📁 Pilih Gambar</label>
+                    </div>
+                    <div class="preview-container" id="darkenPreview"></div>
+                    <button class="process-btn" onclick="processWaifu('darken')">Segera Hitamkan</button>
+                </div>
+                <div id="darkenResult" class="result-section"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="baldModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Pembotak Waifu</h2>
+                <span class="close" onclick="closeModal('baldModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="upload-section">
+                    <div class="file-input-container">
+                        <input type="file" id="baldImage" accept="image/*" class="file-input">
+                        <label for="baldImage" class="file-label">📁 Pilih Gambar</label>
+                    </div>
+                    <div class="preview-container" id="baldPreview"></div>
+                    <button class="process-btn" onclick="processWaifu('bald')">Segera Botakan</button>
+                </div>
+                <div id="baldResult" class="result-section"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/script.js"></script>
+</body>
+</html>
