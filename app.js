@@ -13,7 +13,7 @@ app.use(express.static(__dirname + '/public'));
 
 app.get('/', (req, res) => {
     res.render('index', {
-        title: 'Waifu Darkener',
+        title: 'Penghitaman & Pembotakan Gambar.',
         description: 'Darken & Make your waifu bald with AI'
     });
 });
@@ -33,7 +33,7 @@ app.post('/process', upload.none(), async (req, res) => {
 
         let prompt = processType === 'darken'
             ? 'ubah karakter gambar tersebut menjadi kulit hitam.'
-            : 'edit gambar sehingga karakter menjadi botak natural, rambut dihilangkan secara halus, kulit kepala terlihat jelas';
+            : 'edit gambar karakter menjadi botak natural, rambut dihilangkan secara halus, kulit kepala terlihat jelas';
 
         formData.append('param', prompt);
 
@@ -61,5 +61,6 @@ app.post('/process', upload.none(), async (req, res) => {
 app.listen(port, () => {
     console.log(`udah on PORT:${port}`);
 });
+
 
 
