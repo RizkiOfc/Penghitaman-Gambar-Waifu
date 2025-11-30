@@ -1,7 +1,7 @@
 {
-  "name": "pengihtaman-waifu",
+  "name": "pengihtaman",
   "version": "1.0.0",
-  "description": "Web Pengihtaman Waifu - Gelapkan & Botakin waifu kesayanganmu",
+  "description": "Web Penghitaman & Pembotakan",
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
@@ -19,3 +19,4 @@
     "nodemon": "^3.0.1"
   }
 }
+
