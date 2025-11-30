@@ -59,6 +59,7 @@ app.post('/process', upload.none(), async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`udah on PORT:${port}`) be;
+    console.log(`udah on PORT:${port}`);
 });
+
 
