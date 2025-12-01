@@ -85,6 +85,27 @@ body {
   border: 1px solid var(--border);
 }
 
+.footer {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 50px;
+    border-top: 1px solid #34495e;
+}
+
+.footer-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer-content p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #bdc3c7;
+}
+
 .tool-description {
   margin-bottom: 12px;
   color: var(--text-secondary);
@@ -308,3 +329,4 @@ body {
     max-height: 220px;
   }
 }
+
