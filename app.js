@@ -3,6 +3,7 @@ const axios = require('axios');
 const multer = require('multer');
 const crypto = require('crypto');
 const fs = require('fs');
+
 const upload = multer();
 const app = express();
 const port = process.env.PORT || 3000;
@@ -20,132 +21,109 @@ app.get('/', (req, res) => {
     });
 });
 
-class AuthGenerator {
-    static #PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDa2oPxMZe71V4dw2r8rHWt59gH
-W5INRmlhepe6GUanrHykqKdlIB4kcJiu8dHC/FJeppOXVoKz82pvwZCmSUrF/1yr
-rnmUDjqUefDu8myjhcbio6CnG5TtQfwN2pz3g6yHkLgp8cFfyPSWwyOCMMMsTU9s
-snOjvdDb4wiZI8x3UwIDAQAB
------END PUBLIC KEY-----`;
-    static #S = 'NHGNy5YFz7HeFb';
-    
-    constructor(appId) {
-        this.appId = appId;
-    }
-    
-    aesEncrypt(data, key, iv) {
-        const cipher = crypto.createCipheriv('aes-128-cbc', Buffer.from(key), Buffer.from(iv));
-        let encrypted = cipher.update(data, 'utf8', 'base64');
-        encrypted += cipher.final('base64');
-        return encrypted;
-    }
-    
-    generateRandomString(l) {
-        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        let result = '';
-        const r = crypto.randomBytes(l);
-        for (let i = 0; i < l; i++) result += chars.charAt(r[i] % chars.length);
-        return result;
-    }
-    
-    generate() {
-        const t = Math.floor(Date.now() / 1000).toString();
-        const nonce = crypto.randomUUID();
-        const tempAesKey = this.generateRandomString(16);
-
-        const enc = crypto.publicEncrypt({
-            key: AuthGenerator.#PUBLIC_KEY,
-            padding: crypto.constants.RSA_PKCS1_PADDING
-        }, Buffer.from(tempAesKey));
-
-        const secret_key = enc.toString('base64');
-        const data = `${this.appId}:${AuthGenerator.#S}:${t}:${nonce}:${secret_key}`;
-        const sign = this.aesEncrypt(data, tempAesKey, tempAesKey);
-        
-        return { app_id: this.appId, t, nonce, sign, secret_key };
-    }
-}
-
-async function convert(buffer, prompt) {
-    const auth = new AuthGenerator('ai_df');
-    const authData = auth.generate();
-    const userId = auth.generateRandomString(64).toLowerCase();
-    
-    const headers = {
-        'Access-Control-Allow-Credentials': 'true',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Android 15; Mobile; SM-F958; rv:130.0) Gecko/130.0 Firefox/130.0',
-        'Referer': 'https://deepfakemaker.io/nano-banana-ai/'
-    };
-    
-    const instance = axios.create({
-        baseURL: 'https://apiv1.deepfakemaker.io/api',
-        params: authData,
-        headers
-    });
-
-    const file = await instance.post('/user/v2/upload-sign', {
-        filename: auth.generateRandomString(32) + '_' + Date.now() + '.jpg',
-        hash: crypto.createHash('sha256').update(buffer).digest('hex'),
-        user_id: userId
-    }).then(r => r.data);
-
-    await axios.put(file.data.url, buffer, {
-        headers: { 'content-type': 'image/jpeg', 'content-length': buffer.length }
-    });
-
-    const task = await instance.post('/replicate/v1/free/nano/banana/task', {
-        prompt,
-        platform: 'nano_banana',
-        images: ['https://cdn.deepfakemaker.io/' + file.data.object_name],
-        output_format: 'png',
-        user_id: userId
-    }).then(r => r.data);
-
-    const result = await new Promise((resolve, reject) => {
-        let retries = 20;
-        const i = setInterval(async () => {
-            const x = await instance.get('/replicate/v1/free/nano/banana/task', {
-                params: { user_id: userId, ...task.data }
-            }).then(r => r.data);
-
-            if (x.msg === 'success') {
-                clearInterval(i);
-                resolve(x.data.generate_url);
-            }
-            if (--retries <= 0) {
-                clearInterval(i);
-                reject(new Error('Failed to get task.'));
-            }
-        }, 2500);
-    });
-
-    return result;
-}
-
 app.post('/process', upload.none(), async (req, res) => {
     try {
         const { imageData, processType } = req.body;
         if (!imageData) return res.json({ success: false, error: 'Pilih gambar dulu' });
 
-        const buffer = Buffer.from(imageData.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-        const prompt = processType === 'darken'
-            ? 'change skin color to black'
-            : 'remove hair, bald, clean scalp, natural lighting';
+        const buffer = Buffer.from(
+            imageData.replace(/^data:image\/\w+;base64,/, ''),
+            'base64'
+        );
 
-        const url = await convert(buffer, prompt);
-        const imgBuffer = (await axios.get(url, { responseType: 'arraybuffer' })).data;
+        const formData = new FormData();
+        formData.append('image', new Blob([buffer]), 'input.png');
+
+        const prompt =
+            processType === 'darken'
+                ? 'ubah karakter gambar tersebut menjadi kulit hitam.'
+                : 'edit gambar karakter menjadi botak natural, rambut dihilangkan secara halus, kulit kepala terlihat jelas';
+
+        formData.append('param', prompt);
+
+        const response = await fetch("https://api.elrayyxml.web.id/api/ai/nanobanana", {
+            method: "POST",
+            body: formData
+        });
+
+        const arrayBuffer = await response.arrayBuffer();
+        const base64Result = Buffer.from(arrayBuffer).toString('base64');
 
         res.json({
             success: true,
-            processedImage: `data:image/png;base64,${Buffer.from(imgBuffer).toString('base64')}`,
+            processedImage: `data:image/png;base64,${base64Result}`,
             processType,
             analysis: processType === 'darken' ? 'Sudah dihitamkan.' : 'Sudah dibotakan.'
         });
 
     } catch (err) {
-        res.json({ success: false, error: err.message });
+        res.json({ success: false, error: 'Gagal memproses gambar.' });
     }
 });
 
-app.listen(port, () => console.log(`udah on PORT:${port}`));
+app.listen(port, () => {
+    console.log(`udah on PORT:${port}`);
+});
+
+async function nanobanana(prompt, image) {
+    try {
+        if (!prompt) throw new Error('Prompt is required.');
+        if (!Buffer.isBuffer(image)) throw new Error('Image must be a buffer.');
+
+        const inst = axios.create({
+            baseURL: 'https://image-editor.org/api',
+            headers: {
+                origin: 'https://image-editor.org',
+                referer: 'https://image-editor.org/editor',
+                'user-agent': 'Mozilla/5.0 (Linux; Android 15; SM-F958 Build/AP3A.240905.015) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.6723.86 Mobile Safari/537.36'
+            }
+        });
+
+        const { data: up } = await inst.post('/upload/presigned', {
+            filename: `${Date.now()}_rynn.jpg`,
+            contentType: 'image/jpeg'
+        });
+
+        if (!up?.data?.uploadUrl) throw new Error('Upload url not found.');
+        await axios.put(up.data.uploadUrl, image);
+
+        const { data: cf } = await axios.post('https://api.nekolabs.web.id/tools/bypass/cf-turnstile', {
+            url: 'https://image-editor.org/editor',
+            siteKey: '0x4AAAAAAB8ClzQTJhVDd_pU'
+        });
+
+        if (!cf?.result) throw new Error('Failed to get cf token.');
+
+        const { data: task } = await inst.post('/edit', {
+            prompt: 'change skin color to black',
+            image_urls: [up.data.fileUrl],
+            image_size: 'auto',
+            turnstileToken: cf.result,
+            uploadIds: [up.data.uploadId],
+            userUUID: crypto.randomUUID(),
+            imageHash: crypto
+                .createHash('sha256')
+                .update(image)
+                .digest('hex')
+                .substring(0, 64)
+        });
+
+        if (!task?.data?.taskId) throw new Error('Task id not found.');
+
+        while (true) {
+            const { data } = await inst.get(`/task/${task.data.taskId}`);
+            if (data?.data?.status === 'completed') {
+                return data.data.result;
+            }
+            await new Promise((res) => setTimeout(res, 1000));
+        }
+
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+
+nanobanana(
+    'change skin color to black',
+    fs.readFileSync('./ex/image.jpg')
+).then(console.log);
